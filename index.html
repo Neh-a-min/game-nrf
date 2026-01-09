@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Signal or Noise? Retail Edition</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: #fff;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        height: 100%;
+      }
+      #root {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .app {
+        width: 100%;
+        max-width: 960px;
+        padding: 32px;
+      }
+      .screen {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .title {
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        text-align: center;
+      }
+      .subtitle {
+        font-size: 18px;
+        text-align: center;
+        opacity: 0.8;
+      }
+      .button {
+        appearance: none;
+        border: none;
+        background: #fff;
+        color: #000;
+        font-weight: 700;
+        padding: 16px 28px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 18px;
+        transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+      }
+      .button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .button.play {
+        align-self: center;
+        font-size: 20px;
+        padding: 18px 40px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .situation {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      @media (min-width: 820px) {
+        .tiles {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .tile {
+        background: #111;
+        border: 2px solid #222;
+        border-radius: 12px;
+        padding: 18px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 120ms ease, transform 80ms ease, opacity 160ms ease, background 120ms ease, color 120ms ease;
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+      }
+      .tile:hover {
+        border-color: #444;
+        transform: translateY(-1px);
+      }
+      .tile.selected {
+        border-color: #fff;
+        background: #1a1a1a;
+      }
+      .tile.correct {
+        border-color: #2ecc71;
+        background: #112416;
+        color: #c7f5d9;
+      }
+      .tile.wrong-selected {
+        border-color: #ff4d4f;
+        background: #2a1215;
+        color: #ffb3b5;
+      }
+      .tile.wrong {
+        opacity: 0.35;
+      }
+      .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .pick {
+        font-size: 16px;
+        opacity: 0.8;
+      }
+      .timer {
+        font-size: 16px;
+        font-weight: 700;
+        background: #111;
+        border: 2px solid #222;
+        border-radius: 10px;
+        padding: 10px 14px;
+        min-width: 64px;
+        text-align: center;
+      }
+      .score {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .delta {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2ecc71;
+      }
+      .reason {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+      .center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script type="text/babel">
+      const { useEffect, useMemo, useState } = React;
+
+      const rounds = [
+        {
+          situation: "Grocery: Between 5–9 pm, milk and bread kept going out of stock.",
+          options: [
+            { text: "Sudden heavy rain in the evening", correct: true },
+            { text: "Big road closure nearby (traffic pattern changed)", correct: true },
+            { text: "A big sports match was on TV", correct: false },
+            { text: "A nearby school had a holiday", correct: false },
+            { text: "A small earthquake happened in another country", correct: false }
+          ],
+          reason: "Rain and road closure changed shopping patterns."
+        },
+        {
+          situation: "CPG: A 2-for-1 deal boosted sales, but profit fell.",
+          options: [
+            { text: "Retailer also ran big discounts on similar brands", correct: true },
+            { text: "Stock wasn’t in the right warehouses, so shipping got expensive", correct: true },
+            { text: "It was a long weekend in a different state", correct: false },
+            { text: "A celebrity mentioned your category", correct: false },
+            { text: "The weather was slightly cooler than normal", correct: false }
+          ],
+          reason: "Competing discounts and costly shipping reduced margin."
+        },
+        {
+          situation: "QSR: Lunch wait times doubled and delivery orders were late.",
+          options: [
+            { text: "A big office nearby had an event (extra lunch crowd)", correct: true },
+            { text: "Bad traffic + fewer delivery riders available", correct: true },
+            { text: "A new billboard went up on the street", correct: false },
+            { text: "A food blogger posted last week", correct: false },
+            { text: "The store changed its seating layout", correct: false }
+          ],
+          reason: "Event-driven demand with limited riders delayed service."
+        },
+        {
+          situation: "Fashion: A winter jacket suddenly stopped moving for 3 days in one city.",
+          options: [
+            { text: "Unexpected warm weather in that city (temperature jumped)", correct: true },
+            { text: "A major mall/area had reduced footfall due to roadworks nearby", correct: true },
+            { text: "A new clothing store opened in another city", correct: false },
+            { text: "The brand posted a new campaign video", correct: false },
+            { text: "A fashion magazine cover featured jackets", correct: false }
+          ],
+          reason: "Warm weather and lower footfall cut demand."
+        },
+        {
+          situation: "Omnichannel: Curbside pickups were smooth all week, then many were late yesterday.",
+          options: [
+            { text: "Construction reduced the number of pickup parking spots", correct: true },
+            { text: "A local event caused traffic and everyone arrived at once", correct: true },
+            { text: "The store changed its entrance signboard", correct: false },
+            { text: "A new playlist played in-store", correct: false },
+            { text: "The store painted the pickup zone", correct: false }
+          ],
+          reason: "Fewer spots and sudden traffic created a backlog."
+        }
+      ];
+
+      function App() {
+        const [phase, setPhase] = useState("start");
+        const [roundIndex, setRoundIndex] = useState(0);
+        const [selected, setSelected] = useState([]);
+        const [score, setScore] = useState(0);
+        const [lastDelta, setLastDelta] = useState(0);
+        const [timeLeft, setTimeLeft] = useState(10);
+        const [locked, setLocked] = useState(false);
+
+        const current = rounds[roundIndex];
+
+        useEffect(() => {
+          if (phase === "question") {
+            setSelected([]);
+            setTimeLeft(10);
+            setLocked(false);
+            setLastDelta(0);
+          }
+        }, [phase, roundIndex]);
+
+        useEffect(() => {
+          if (phase !== "question" || locked) return;
+          const id = setInterval(() => {
+            setTimeLeft((t) => t - 1);
+          }, 1000);
+          return () => clearInterval(id);
+        }, [phase, locked]);
+
+        useEffect(() => {
+          if (phase === "question" && timeLeft <= 0 && !locked) {
+            lockIn();
+          }
+        }, [timeLeft, phase, locked]);
+
+        const correctIndices = useMemo(() => {
+          return current.options.map((o, i) => (o.correct ? i : null)).filter((i) => i !== null);
+        }, [current]);
+
+        const toggleSelect = (i) => {
+          if (locked || phase !== "question") return;
+          if (selected.includes(i)) {
+            setSelected(selected.filter((x) => x !== i));
+          } else if (selected.length < 2) {
+            setSelected([...selected, i]);
+          }
+        };
+
+        const lockIn = () => {
+          if (locked) return;
+          const correctCount = selected.filter((i) => correctIndices.includes(i)).length;
+          const delta = correctCount * 100;
+          setScore((s) => s + delta);
+          setLastDelta(delta);
+          setLocked(true);
+          setPhase("reveal");
+        };
+
+        const start = () => {
+          setPhase("question");
+          setRoundIndex(0);
+          setScore(0);
+          setLastDelta(0);
+        };
+
+        const nextRound = () => {
+          if (roundIndex + 1 < rounds.length) {
+            setRoundIndex((i) => i + 1);
+            setPhase("question");
+          } else {
+            setPhase("final");
+          }
+        };
+
+        if (phase === "start") {
+          return (
+            <div className="app screen">
+              <div className="title">Signal or Noise? Retail Edition</div>
+              <div className="subtitle">Pick the 2 real signals for each situation</div>
+              <button className="button play" onClick={start}>PLAY</button>
+            </div>
+          );
+        }
+
+        if (phase === "question") {
+          return (
+            <div className="app screen">
+              <div className="row">
+                <div className="situation">{current.situation}</div>
+                <div className="score">Score: {score}</div>
+              </div>
+              <div className="tiles">
+                {current.options.map((opt, i) => {
+                  const isSelected = selected.includes(i);
+                  return (
+                    <div
+                      key={i}
+                      className={"tile" + (isSelected ? " selected" : "")}
+                      onClick={() => toggleSelect(i)}
+                    >
+                      {opt.text}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="footer">
+                <div className="pick">Pick 2 signals</div>
+                <div className="timer">{timeLeft > 0 ? `${timeLeft}s` : "0s"}</div>
+                <button className="button" disabled={selected.length !== 2} onClick={lockIn}>LOCK IN</button>
+              </div>
+            </div>
+          );
+        }
+
+        if (phase === "reveal") {
+          return (
+            <div className="app screen">
+              <div className="row">
+                <div className="situation">{current.situation}</div>
+                <div className="delta">{lastDelta > 0 ? `+${lastDelta}` : "+0"}</div>
+              </div>
+              <div className="tiles">
+                {current.options.map((opt, i) => {
+                  const isCorrect = correctIndices.includes(i);
+                  let cls = "tile";
+                  if (isCorrect) cls += " correct";
+                  else if (selected.includes(i)) cls += " wrong-selected";
+                  else cls += " wrong";
+                  return (
+                    <div key={i} className={cls}>
+                      {opt.text}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="row">
+                <div className="reason">{current.reason}</div>
+                <div className="score">Score: {score}</div>
+              </div>
+              <div className="center">
+                <button className="button" onClick={nextRound}>NEXT ROUND</button>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="app screen">
+            <div className="title">Final Score</div>
+            <div className="subtitle">{score}</div>
+            <div className="center">
+              <button className="button play" onClick={start}>PLAY AGAIN</button>
+            </div>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
