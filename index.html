@@ -349,7 +349,7 @@
         });
 
         const current = rounds[roundIndex];
-        const shownOptions = useMemo(() => shuffle(current.options), [roundIndex, phase]);
+        const shownOptions = useMemo(() => shuffle(current.options), [roundIndex]);
 
         useEffect(() => {
           if (phase === "question") {
@@ -393,11 +393,11 @@
 
         const toggleSelect = (i) => {
           if (locked || phase !== "question") return;
-          if (selected.includes(i)) {
-            setSelected(selected.filter((x) => x !== i));
-          } else if (selected.length < 2) {
-            setSelected([...selected, i]);
-          }
+          setSelected((prev) => {
+            if (prev.includes(i)) return prev.filter((x) => x !== i);
+            if (prev.length >= 2) return prev;
+            return [...prev, i];
+          });
         };
 
         const lockIn = () => {
