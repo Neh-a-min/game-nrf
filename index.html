@@ -162,71 +162,171 @@
         align-items: center;
         justify-content: center;
       }
+      .input {
+        width: 100%;
+        max-width: 420px;
+        background: #111;
+        border: 2px solid #222;
+        border-radius: 10px;
+        color: #fff;
+        padding: 12px 14px;
+        font-size: 16px;
+        outline: none;
+        transition: border-color 120ms ease;
+        margin: 0 auto;
+      }
+      .input:focus {
+        border-color: #444;
+      }
+      .nav {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+      }
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #0a0a0a;
+        border: 2px solid #222;
+        border-radius: 10px;
+        padding: 12px 14px;
+      }
+      .item-name {
+        font-weight: 600;
+      }
+      .item-score {
+        font-weight: 700;
+      }
+      .topcard {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #121212;
+        border: 2px solid #555;
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 8px;
+      }
+      .statgrid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      @media (min-width: 720px) {
+        .statgrid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .statcard {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #121212;
+        border: 2px solid #333;
+        border-radius: 12px;
+        padding: 16px 18px;
+      }
+      .statcard .label {
+        font-size: 16px;
+        opacity: 0.8;
+        margin-right: 12px;
+      }
+      .statcard .name {
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .statcard .score {
+        font-weight: 800;
+        font-size: 20px;
+      }
+      .topcard .label {
+        font-size: 16px;
+        opacity: 0.8;
+        margin-right: 12px;
+      }
+      .topcard .name {
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .topcard .score {
+        font-weight: 800;
+        font-size: 20px;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script type="text/babel">
+    <script type="text/javascript">
       const { useEffect, useMemo, useState } = React;
+      const h = React.createElement;
+      const shuffle = (arr) => {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+      };
 
       const rounds = [
         {
-          situation: "Grocery: Between 5–9 pm, milk and bread kept going out of stock.",
+          situation: "Grocery: Between 5–9 pm, milk and bread were unusually overstocked — shelves stayed full.",
           options: [
-            { text: "Sudden heavy rain in the evening", correct: true },
-            { text: "Big road closure nearby (traffic pattern changed)", correct: true },
+            { text: "Heavy rain warning in the evening", correct: true },
+            { text: "Road closure delayed the staples replenishment truck", correct: true },
             { text: "A big sports match was on TV", correct: false },
             { text: "A nearby school had a holiday", correct: false },
             { text: "A small earthquake happened in another country", correct: false }
-          ],
-          reason: "Rain and road closure changed shopping patterns."
+          ]
         },
         {
-          situation: "CPG: A 2-for-1 deal boosted sales, but profit fell.",
+          situation: "Eggs sold out early morning for 3 days.",
           options: [
-            { text: "Retailer also ran big discounts on similar brands", correct: true },
-            { text: "Stock wasn’t in the right warehouses, so shipping got expensive", correct: true },
-            { text: "It was a long weekend in a different state", correct: false },
-            { text: "A celebrity mentioned your category", correct: false },
-            { text: "The weather was slightly cooler than normal", correct: false }
-          ],
-          reason: "Competing discounts and costly shipping reduced margin."
+            { text: "Nearby hotel/bakery/caterer placed large bulk egg orders each morning", correct: true },
+            { text: "Local festival/holiday season increased breakfast and baking demand", correct: true },
+            { text: "A nearby gym opened this week", correct: false },
+            { text: "A new billboard went up on the main road", correct: false },
+            { text: "The store changed shelf labels in the dairy aisle", correct: false }
+          ]
         },
         {
-          situation: "QSR: Lunch wait times doubled and delivery orders were late.",
+          situation: "QSR: Lunch queues doubled and delivery orders were late.",
           options: [
-            { text: "A big office nearby had an event (extra lunch crowd)", correct: true },
+            { text: "Annual classical music conference nearby attracted huge crowds", correct: true },
             { text: "Bad traffic + fewer delivery riders available", correct: true },
             { text: "A new billboard went up on the street", correct: false },
             { text: "A food blogger posted last week", correct: false },
             { text: "The store changed its seating layout", correct: false }
-          ],
-          reason: "Event-driven demand with limited riders delayed service."
+          ]
         },
         {
-          situation: "Fashion: A winter jacket suddenly stopped moving for 3 days in one city.",
+          situation: "Fashion: Winter jacket sales suddenly dropped in one city despite previous demand.",
           options: [
-            { text: "Unexpected warm weather in that city (temperature jumped)", correct: true },
-            { text: "A major mall/area had reduced footfall due to roadworks nearby", correct: true },
+            { text: "Warmer climate than last year slowed jacket sales", correct: true },
+            { text: "Nearby roadworks kept shoppers away", correct: true },
             { text: "A new clothing store opened in another city", correct: false },
             { text: "The brand posted a new campaign video", correct: false },
             { text: "A fashion magazine cover featured jackets", correct: false }
-          ],
-          reason: "Warm weather and lower footfall cut demand."
+          ]
         },
         {
           situation: "Omnichannel: Curbside pickups were smooth all week, then many were late yesterday.",
           options: [
-            { text: "Construction reduced the number of pickup parking spots", correct: true },
+            { text: "Construction blocked access to pickup spots", correct: true },
             { text: "A local event caused traffic and everyone arrived at once", correct: true },
             { text: "The store changed its entrance signboard", correct: false },
             { text: "A new playlist played in-store", correct: false },
             { text: "The store painted the pickup zone", correct: false }
-          ],
-          reason: "Fewer spots and sudden traffic created a backlog."
+          ]
         }
       ];
 
@@ -236,19 +336,42 @@
         const [selected, setSelected] = useState([]);
         const [score, setScore] = useState(0);
         const [lastDelta, setLastDelta] = useState(0);
-        const [timeLeft, setTimeLeft] = useState(10);
+        const [timeLeft, setTimeLeft] = useState(30);
         const [locked, setLocked] = useState(false);
+        const [username, setUsername] = useState("");
+        const [leaderboard, setLeaderboard] = useState(() => {
+          try {
+            const raw = localStorage.getItem("leaderboard");
+            return raw ? JSON.parse(raw) : [];
+          } catch (e) {
+            return [];
+          }
+        });
 
         const current = rounds[roundIndex];
+        const shownOptions = useMemo(() => shuffle(current.options), [roundIndex, phase]);
 
         useEffect(() => {
           if (phase === "question") {
             setSelected([]);
-            setTimeLeft(10);
+            setTimeLeft(30);
             setLocked(false);
             setLastDelta(0);
           }
         }, [phase, roundIndex]);
+
+        const addToLeaderboard = (name, sc) => {
+          const n = (name || "").trim() || "Player";
+          const next = [...leaderboard, { name: n, score: sc, ts: Date.now() }];
+          next.sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            return (a.ts ?? 0) - (b.ts ?? 0);
+          });
+          setLeaderboard(next);
+          try {
+            localStorage.setItem("leaderboard", JSON.stringify(next));
+          } catch (e) {}
+        };
 
         useEffect(() => {
           if (phase !== "question" || locked) return;
@@ -265,8 +388,8 @@
         }, [timeLeft, phase, locked]);
 
         const correctIndices = useMemo(() => {
-          return current.options.map((o, i) => (o.correct ? i : null)).filter((i) => i !== null);
-        }, [current]);
+          return shownOptions.map((o, i) => (o.correct ? i : null)).filter((i) => i !== null);
+        }, [shownOptions]);
 
         const toggleSelect = (i) => {
           if (locked || phase !== "question") return;
@@ -299,95 +422,135 @@
             setRoundIndex((i) => i + 1);
             setPhase("question");
           } else {
+            addToLeaderboard(username, score);
             setPhase("final");
           }
         };
 
         if (phase === "start") {
-          return (
-            <div className="app screen">
-              <div className="title">Signal or Noise? Retail Edition</div>
-              <div className="subtitle">Pick the 2 real signals for each situation</div>
-              <button className="button play" onClick={start}>PLAY</button>
-            </div>
+          return h("div", { className: "app screen" },
+            h("div", { className: "title" }, "Signal or Noise? Retail Edition"),
+            h("div", { className: "subtitle" }, "Enter a username, then play"),
+            h("input", {
+              className: "input",
+              placeholder: "Enter username",
+              value: username,
+              onChange: (e) => setUsername(e.target.value)
+            }),
+            h("div", { className: "nav" },
+              h("button", { className: "button play", disabled: !username.trim(), onClick: start }, "PLAY"),
+              h("button", { className: "button", onClick: () => setPhase("leaderboard") }, "LEADERBOARD")
+            )
+          );
+        }
+
+        if (phase === "leaderboard") {
+          const sorted = [...leaderboard].sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            return (a.ts ?? 0) - (b.ts ?? 0);
+          });
+          return h("div", { className: "app screen" },
+            h("div", { className: "title" }, "Leaderboard"),
+            leaderboard.length === 0
+              ? h("div", { className: "subtitle" }, "No scores yet")
+              : (() => {
+                  const highest = sorted[0];
+                  const myEntries = username ? sorted.filter(e => e.name === username) : [];
+                  const myLatest = myEntries.length
+                    ? myEntries.reduce((acc, e) => (e.ts ?? 0) > (acc.ts ?? 0) ? e : acc, myEntries[0])
+                    : null;
+                  return h(React.Fragment, null,
+                    h("div", { className: "statgrid" },
+                      h("div", { className: "statcard" },
+                        h("div", { className: "label" }, "Your Score"),
+                        h("div", { className: "name" }, myLatest ? myLatest.name : (username || "—")),
+                        h("div", { className: "score" }, myLatest ? String(myLatest.score) : "—")
+                      ),
+                      h("div", { className: "statcard" },
+                        h("div", { className: "label" }, "Highest Player"),
+                        h("div", { className: "name" }, highest.name),
+                        h("div", { className: "score" }, String(highest.score))
+                      )
+                    ),
+                    h("div", { className: "list" },
+                      ...sorted.slice(0, 50).map((entry, idx) =>
+                        h("div", { className: "item", key: idx },
+                          h("div", { className: "item-name" }, entry.name),
+                          h("div", { className: "item-score" }, String(entry.score))
+                        )
+                      )
+                    )
+                  );
+                })(),
+            h("div", { className: "nav" },
+              h("button", { className: "button", onClick: () => setPhase("start") }, "BACK")
+            )
           );
         }
 
         if (phase === "question") {
-          return (
-            <div className="app screen">
-              <div className="row">
-                <div className="situation">{current.situation}</div>
-                <div className="score">Score: {score}</div>
-              </div>
-              <div className="tiles">
-                {current.options.map((opt, i) => {
-                  const isSelected = selected.includes(i);
-                  return (
-                    <div
-                      key={i}
-                      className={"tile" + (isSelected ? " selected" : "")}
-                      onClick={() => toggleSelect(i)}
-                    >
-                      {opt.text}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="footer">
-                <div className="pick">Pick 2 signals</div>
-                <div className="timer">{timeLeft > 0 ? `${timeLeft}s` : "0s"}</div>
-                <button className="button" disabled={selected.length !== 2} onClick={lockIn}>LOCK IN</button>
-              </div>
-            </div>
+          return h("div", { className: "app screen" },
+            h("div", { className: "row" },
+              h("div", { className: "situation" }, current.situation),
+              h("div", { className: "score" }, `Score: ${score}`)
+            ),
+            h("div", { className: "tiles" },
+              ...shownOptions.map((opt, i) => {
+                const isSelected = selected.includes(i);
+                return h("div", {
+                  key: i,
+                  className: "tile" + (isSelected ? " selected" : ""),
+                  onClick: () => toggleSelect(i)
+                }, opt.text);
+              })
+            ),
+            h("div", { className: "footer" },
+              h("div", { className: "pick" }, "Pick 2 signals"),
+              h("div", { className: "timer" }, timeLeft > 0 ? `${timeLeft}s` : "0s"),
+              h("button", { className: "button", disabled: selected.length !== 2, onClick: lockIn }, "LOCK IN")
+            )
           );
         }
 
         if (phase === "reveal") {
-          return (
-            <div className="app screen">
-              <div className="row">
-                <div className="situation">{current.situation}</div>
-                <div className="delta">{lastDelta > 0 ? `+${lastDelta}` : "+0"}</div>
-              </div>
-              <div className="tiles">
-                {current.options.map((opt, i) => {
-                  const isCorrect = correctIndices.includes(i);
-                  let cls = "tile";
-                  if (isCorrect) cls += " correct";
-                  else if (selected.includes(i)) cls += " wrong-selected";
-                  else cls += " wrong";
-                  return (
-                    <div key={i} className={cls}>
-                      {opt.text}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="row">
-                <div className="reason">{current.reason}</div>
-                <div className="score">Score: {score}</div>
-              </div>
-              <div className="center">
-                <button className="button" onClick={nextRound}>NEXT ROUND</button>
-              </div>
-            </div>
+          return h("div", { className: "app screen" },
+            h("div", { className: "row" },
+              h("div", { className: "situation" }, current.situation),
+              h("div", { className: "delta" }, lastDelta > 0 ? `+${lastDelta}` : "+0")
+            ),
+            h("div", { className: "tiles" },
+              ...shownOptions.map((opt, i) => {
+                const isCorrect = correctIndices.includes(i);
+                let cls = "tile";
+                if (isCorrect) cls += " correct";
+                else if (selected.includes(i)) cls += " wrong-selected";
+                else cls += " wrong";
+                return h("div", { key: i, className: cls }, opt.text);
+              })
+            ),
+            h("div", { className: "row", style: { justifyContent: "flex-end" } },
+              h("div", { className: "score" }, `Score: ${score}`)
+            ),
+            h("div", { className: "center" },
+              h("button", { className: "button", onClick: nextRound }, "NEXT ROUND")
+            )
           );
         }
 
-        return (
-          <div className="app screen">
-            <div className="title">Final Score</div>
-            <div className="subtitle">{score}</div>
-            <div className="center">
-              <button className="button play" onClick={start}>PLAY AGAIN</button>
-            </div>
-          </div>
+        return h("div", { className: "app screen" },
+          h("div", { className: "title" }, "Final Score"),
+          h("div", { className: "subtitle" }, String(score)),
+          h("div", { className: "center" },
+            h("button", { className: "button play", onClick: start }, "PLAY AGAIN")
+          ),
+          h("div", { className: "center", style: { marginTop: 8 } },
+            h("button", { className: "button", onClick: () => setPhase("leaderboard") }, "VIEW LEADERBOARD")
+          )
         );
       }
 
       const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(<App />);
+      root.render(h(App));
     </script>
   </body>
 </html>
